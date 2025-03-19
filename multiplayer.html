@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ultimate Tic Tac Toe</title>
+    <link rel="stylesheet" href="game.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Electrolize&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!--The top that says what player's turn it is-->
+    <div class="status">Current Player: X</div>
+    <!--Where the game board is-->
+    <div class="game-container" id="gameContainer"></div>
+    <!--Reset the game-->
+    <button onclick="resetGame()">Reset Game</button>
+
+    <script>
+        let currentPlayer = 'X';
+        let activeBoard = null;
+        //this is the board and the fill when a player wins
+        let gameBoard = Array(9).fill().map(() => Array(9).fill(''));
+        let boardWinners = Array(9).fill('');
+        //creates the game board and resets
+        function createGame() {
+            const container = document.getElementById('gameContainer');
+            for (let i = 0; i < 9; i++) {
+                const board = document.createElement('div');
+                board.className = 'board';
+                board.dataset.index = i;
+                
+                for (let j = 0; j < 9; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.board = i;
+                    cell.dataset.cell = j;
+                    cell.addEventListener('click', handleCellClick);
+                    board.appendChild(cell);
+                }
+                container.appendChild(board);
+            }
+        }
+        //fills the square with the letter
+        function handleCellClick(e) {
+            const boardIndex = parseInt(e.target.dataset.board);
+            const cellIndex = parseInt(e.target.dataset.cell);
+            
+            if (!isMoveValid(boardIndex, cellIndex)) return;
+
+            gameBoard[boardIndex][cellIndex] = currentPlayer;
+            e.target.textContent = currentPlayer;
+            e.target.classList.add(currentPlayer.toLowerCase());
+            //checks if the board is won
+            checkBoardWin(boardIndex);
+            checkGameWin();
+            //changes the board
+            activeBoard = getNextActiveBoard(cellIndex);
+            updateBoardStates();
+            
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            document.querySelector('.status').textContent = `Current Player: ${currentPlayer}`;
+        }
+        //checks if it is a legal move
+        function isMoveValid(boardIndex, cellIndex) {
+            if (activeBoard !== null && boardIndex !== activeBoard) return false;
+            if (gameBoard[boardIndex][cellIndex] !== '') return false;
+            if (boardWinners[boardIndex] !== '') return false;
+            return true;
+        }
+        //win combonations
+        function checkBoardWin(boardIndex) {
+            const board = gameBoard[boardIndex];
+            const winCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (let combo of winCombos) {
+                const [a, b, c] = combo;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    boardWinners[boardIndex] = board[a];
+                    const boardElement = document.querySelector(`[data-index="${boardIndex}"]`);
+                    boardElement.classList.add('won', board[a].toLowerCase());
+                    return true;
+                }
+            }
+            return false;
+        }
+        //verify the winning
+        function checkGameWin() {
+            const winCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            let winner = null;
+            
+            for (let combo of winCombos) {
+                const [a, b, c] = combo;
+                if (boardWinners[a] && 
+                    boardWinners[a] === boardWinners[b] && 
+                    boardWinners[a] === boardWinners[c]) {
+                    winner = boardWinners[a];
+                    break;
+                }
+            }
+
+            if (winner) {
+                setTimeout(() => {
+                    alert(`${winner} wins the game!`);
+                    resetGame();
+                }, 10);
+            }
+        }
+
+        function getNextActiveBoard(cellIndex) {
+            if (boardWinners[cellIndex] === '' && 
+                gameBoard[cellIndex].some(cell => cell === '')) {
+                return cellIndex;
+            }
+            return null;
+        }
+
+        function updateBoardStates() {
+            document.querySelectorAll('.board').forEach((board, index) => {
+                board.classList.toggle('active', activeBoard === null || activeBoard === index);
+            });
+        }
+        //function of the reset button
+        function resetGame() {
+            currentPlayer = 'X';
+            activeBoard = null;
+            gameBoard = Array(9).fill().map(() => Array(9).fill(''));
+            boardWinners = Array(9).fill('');
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.textContent = '';
+                cell.className = 'cell';
+            });
+            document.querySelectorAll('.board').forEach(board => {
+                board.className = 'board';
+            });
+            document.querySelector('.status').textContent = `Current Player: ${currentPlayer}`;
+            updateBoardStates();
+        }
+
+        createGame();
+        updateBoardStates();
+    </script>
+</body>
+</html>

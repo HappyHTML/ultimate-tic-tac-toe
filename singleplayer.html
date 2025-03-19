@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Singleplayer Ultimate Tic Tac Toe</title>
+    <link rel="stylesheet" href="game.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Electrolize&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="status">Your turn (X)</div>
+    <div class="game-container" id="gameContainer"></div>
+    <button onclick="resetGame()">Reset Game</button>
+
+    <script>
+        let currentPlayer = 'X';
+        let activeBoard = null;
+        let gameBoard = Array(9).fill().map(() => Array(9).fill(''));
+        let boardWinners = Array(9).fill('');
+        let gameActive = true;
+
+        function createGame() {
+            const container = document.getElementById('gameContainer');
+            for (let i = 0; i < 9; i++) {
+                const board = document.createElement('div');
+                board.className = 'board';
+                board.dataset.index = i;
+                
+                for (let j = 0; j < 9; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.board = i;
+                    cell.dataset.cell = j;
+                    cell.addEventListener('click', handlePlayerClick);
+                    board.appendChild(cell);
+                }
+                container.appendChild(board);
+            }
+        }
+
+        function handlePlayerClick(e) {
+            if (!gameActive || currentPlayer !== 'X') return;
+
+            const boardIndex = parseInt(e.target.dataset.board);
+            const cellIndex = parseInt(e.target.dataset.cell);
+            
+            if (!isMoveValid(boardIndex, cellIndex)) return;
+
+            makeMove(boardIndex, cellIndex, 'X');
+            
+            if (!checkGameWin()) {
+                currentPlayer = 'O';
+                document.querySelector('.status').textContent = 'Computer is thinking...';
+                document.querySelector('.status').classList.add('computer-turn');
+                setTimeout(computerMove, 500);
+            }
+        }
+
+        function computerMove() {
+            if (!gameActive) return;
+
+            const validMoves = [];
+            const targetBoards = activeBoard !== null ? [activeBoard] : 
+                Array.from({length: 9}, (_, i) => i).filter(i => boardWinners[i] === '');
+
+            targetBoards.forEach(boardIndex => {
+                if (boardWinners[boardIndex] === '') {
+                    gameBoard[boardIndex].forEach((cell, cellIndex) => {
+                        if (cell === '') {
+                            validMoves.push({boardIndex, cellIndex});
+                        }
+                    });
+                }
+            });
+
+            if (validMoves.length > 0) {
+                const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+                makeMove(randomMove.boardIndex, randomMove.cellIndex, 'O');
+            }
+
+            if (!checkGameWin()) {
+                currentPlayer = 'X';
+                document.querySelector('.status').textContent = 'Your turn (X)';
+                document.querySelector('.status').classList.remove('computer-turn');
+            }
+        }
+
+        function makeMove(boardIndex, cellIndex, player) {
+            gameBoard[boardIndex][cellIndex] = player;
+            const cell = document.querySelector(`[data-board="${boardIndex}"][data-cell="${cellIndex}"]`);
+            cell.textContent = player;
+            cell.classList.add(player.toLowerCase());
+            
+            checkBoardWin(boardIndex);
+            activeBoard = getNextActiveBoard(cellIndex);
+            updateBoardStates();
+        }
+
+        function isMoveValid(boardIndex, cellIndex) {
+            if (activeBoard !== null && boardIndex !== activeBoard) return false;
+            if (gameBoard[boardIndex][cellIndex] !== '') return false;
+            if (boardWinners[boardIndex] !== '') return false;
+            return true;
+        }
+
+        function checkBoardWin(boardIndex) {
+            const board = gameBoard[boardIndex];
+            const winCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (let combo of winCombos) {
+                const [a, b, c] = combo;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    boardWinners[boardIndex] = board[a];
+                    const boardElement = document.querySelector(`[data-index="${boardIndex}"]`);
+                    boardElement.classList.add('won', board[a].toLowerCase());
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function checkGameWin() {
+            const winCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (const combo of winCombos) {
+                const [a, b, c] = combo;
+                if (boardWinners[a] && 
+                    boardWinners[a] === boardWinners[b] && 
+                    boardWinners[a] === boardWinners[c]) {
+                    gameActive = false;
+                    setTimeout(() => {
+                        alert(`${boardWinners[a]} wins the game!`);
+                        resetGame();
+                    }, 10);
+                    return true;
+                }
+            }
+
+            // Check for a draw
+            if (boardWinners.every(winner => winner !== '')) {
+                gameActive = false;
+                setTimeout(() => {
+                    alert("It's a draw!");
+                    resetGame();
+                }, 10);
+                return true;
+            }
+
+            return false;
+        }
+
+        function getNextActiveBoard(cellIndex) {
+            if (boardWinners[cellIndex] === '' && 
+                gameBoard[cellIndex].some(cell => cell === '')) {
+                return cellIndex;
+            }
+            return null;
+        }
+
+        function updateBoardStates() {
+            document.querySelectorAll('.board').forEach((board, index) => {
+                board.classList.toggle('active', activeBoard === null || activeBoard === index);
+            });
+        }
+
+        function resetGame() {
+            gameActive = true;
+            currentPlayer = 'X';
+            activeBoard = null;
+            gameBoard = Array(9).fill().map(() => Array(9).fill(''));
+            boardWinners = Array(9).fill('');
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.textContent = '';
+                cell.className = 'cell';
+            });
+            document.querySelectorAll('.board').forEach(board => {
+                board.className = 'board';
+            });
+            document.querySelector('.status').textContent = 'Your turn (X)';
+            document.querySelector('.status').classList.remove('computer-turn');
+            updateBoardStates();
+        }
+
+        // Initialize game
+        createGame();
+        updateBoardStates();
+    </script>
+</body>
+</html>

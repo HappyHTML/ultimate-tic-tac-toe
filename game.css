@@ -1,0 +1,91 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background-color: black;
+    font-family: "Electrolize", serif;
+}
+
+.game-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background-color: #333;
+    padding: 2px;
+    border: 2px solid #666;
+}
+
+.board.active {
+    border-color: #ff4444;
+}
+
+.cell {
+    width: 50px;
+    height: 50px;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cell:hover {
+    background-color: #eee;
+}
+
+.cell.x {
+    color: #4169E1; /* Royal Blue */
+}
+
+.cell.o {
+    color: #000000; /* Black */
+}
+
+.board.won.x {
+    background-color: #4169E1; /* Royal Blue */
+}
+
+.board.won.o {
+    background-color: #000000; /* Black */
+}
+
+.board.won .cell {
+    background-color: transparent;
+    color: white;
+}
+
+.status {
+    font-size: 24px;
+    margin: 20px;
+    min-height: 32px;
+    color: white;
+}
+
+.computer-turn {
+    color: #666;
+    font-style: italic;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: blue;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: rgb(41, 41, 255);
+}
